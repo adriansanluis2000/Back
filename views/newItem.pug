@@ -1,0 +1,31 @@
+extends layout
+
+block content 
+    h2 Nuevo producto
+    link(rel='stylesheet' href='css/add.css')
+    table.table-form
+        form(action="/addItem" method="POST")
+            tr
+                td.label
+                    label(for='nombre') Nombre:
+                td.input
+                    input(type='text' name='nombre')
+            tr 
+                td.label
+                    label(for='precio') Precio:
+                td.input
+                    input(type='number' name='precio')
+            tr
+                td.label
+                    label(for='cantidad') Cantidad:
+                td.input
+                    input(type='number' name='cantidad')
+            tr
+                td
+                td.button
+                    button(type='submit') Añadir producto
+            if errors && errors.length > 0
+                tr
+                    ul.error-list
+                        each error in errors
+                            li= error

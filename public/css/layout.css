@@ -1,0 +1,58 @@
+/* Estilos para el encabezado */
+header {
+    background-color: #444444;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Estilos para el título principal */
+h1 {
+    margin: 0;
+    font-size: 36px;
+}
+
+/* Estilos para la barra lateral */
+aside {
+    background-color: #B2A4FF;
+    float: left;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+}
+
+/* Estilos para la lista de enlaces */
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Estilos para los elementos de la lista de enlaces */
+li {
+    margin-bottom: 20px;
+}
+
+/* Estilos para los enlaces */
+a {
+    color: #333;
+    text-decoration: none;
+    font-size: 20px;
+}
+
+/* Estilos para el contenido principal */
+main {
+    width: 100%;
+    background-color: #fff;
+}
+
+/* Estilos para la barra separadora */
+aside li:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 20px;
+}
+
+/* Estilos para el título principal */
+h2 {
+    font-size: 30px;
+}

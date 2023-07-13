@@ -1,0 +1,31 @@
+extends layout
+
+block content
+    h2 Lista de productos
+    link(rel='stylesheet' href='css/items.css')
+    form(method='GET' action='/search')
+        input.search(type='text' name='q' placeholder='Buscar producto')
+        button.search(type='submit') Buscar
+    table
+        thead
+            tr
+                th Nombre
+                th Cantidad
+                th Precio
+                th Acciones
+        tbody
+            each item in items
+                tr
+                    td= item.nombre
+                    td= item.cantidad
+                    td= item.precio + '€'
+                    td                     
+                        button.edit-item(data-id=item._id)
+                            a(href=`/edit/${item._id}`)
+                                img(src='/editar.jpg' style='max-width: 20px; max-height: 20px;')
+                        button.delete-item(data-id=item._id)
+                            a(href=`/delete/${item._id}`)
+                                img(src='/borrar.avif' style='max-width: 20px; max-height: 20px;')
+    br
+    button.btn-add(type='button')
+        a(href='/addItem') Añadir producto
