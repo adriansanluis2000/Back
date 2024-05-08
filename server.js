@@ -1,7 +1,15 @@
 const express = require('express');
-const productoRoutes = require('./src/routes/productoRoutes');
 const app = express();
 const sequelize = require('./src/config/database');
+const cors = require('cors');
+
+const productoRoutes = require('./src/routes/productoRoutes');
+
+
+// Configura CORS
+app.use(cors({
+  origin: 'http://localhost:4200' // Permite solo solicitudes de este origen
+}));
 
 app.use(express.json()); // Para poder parsear el cuerpo de las solicitudes JSON
 

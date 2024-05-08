@@ -5,7 +5,20 @@ exports.crear = async (req, res) => {
         const producto = await productoService.crearProducto(req.body);
         res.status(201).json(producto);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        if (error.name === 'SequelizeValidationError') {
+            let errores = {};
+            error.errores.forEach(({ path, message }) => {
+                errores[path] = message;
+            });
+            return res.status(400).json({
+                message: "Validación fallida",
+                errors: errores
+            });
+        }
+        res.status(404).json({
+            message: "Error al procesar la solicitud",
+            error: error.message
+        });
     }
 };
 
@@ -14,7 +27,7 @@ exports.listar = async (req, res) => {
         const productos = await productoService.obtenerTodosLosProductos();
         res.status(200).json(productos);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(404).json({ message: error.message });
     }
 };
 
@@ -26,7 +39,7 @@ exports.obtenerPorId = async (req, res) => {
         }
         res.status(200).json(producto);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(404).json({ message: error.message });
     }
 };
 
@@ -35,7 +48,7 @@ exports.actualizar = async (req, res) => {
         const productoActualizado = await productoService.actualizarProducto(req.params.id, req.body);
         res.status(200).json(productoActualizado);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(404).json({ message: error.message });
     }
 };
 
@@ -44,6 +57,6 @@ exports.eliminar = async (req, res) => {
         await productoService.eliminarProducto(req.params.id);
         res.status(200).json({ message: 'Producto eliminado con éxito' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(404).json({ message: error.message });
     }
 };
