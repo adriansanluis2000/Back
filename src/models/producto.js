@@ -53,7 +53,7 @@ const Producto = sequelize.define('Producto', {
   },
   descripcion: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: true
   }
 }, {
   // Opciones del modelo

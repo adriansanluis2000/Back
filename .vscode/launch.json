@@ -17,10 +17,18 @@
             ]
         },
         {
+            "name": "Attach by Process ID",
+            "port": 1234,
+            "request": "attach",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "Jest: current file",
-
             "program": "${workspaceFolder}/node_modules/.bin/jest",
             "args": [
                 "${fileBasenameNoExtension}",

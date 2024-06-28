@@ -1,3 +1,4 @@
+const { ValidationError } = require('sequelize');
 const Producto = require('../models/producto');
 
 class ProductoService {
@@ -6,7 +7,10 @@ class ProductoService {
             const producto = await Producto.create(datosProducto);
             return producto;
         } catch (error) {
-            throw new Error('Error al crear el producto: ' + error.message);
+            if (error instanceof ValidationError) {
+                throw new ValidationError('Error de validación', error.errors);
+            }
+            throw error;
         }
     }
 

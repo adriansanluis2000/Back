@@ -1,3 +1,4 @@
+const { ValidationError } = require('sequelize');
 const productoService = require('../services/productoService');
 
 exports.crear = async (req, res) => {
@@ -5,14 +6,10 @@ exports.crear = async (req, res) => {
         const producto = await productoService.crearProducto(req.body);
         res.status(201).json(producto);
     } catch (error) {
-        if (error.name === 'SequelizeValidationError') {
-            let errores = {};
-            error.errores.forEach(({ path, message }) => {
-                errores[path] = message;
-            });
+        if (error instanceof ValidationError) {
             return res.status(400).json({
                 message: "Validación fallida",
-                errors: errores
+                errors: error.errors
             });
         }
         res.status(404).json({
