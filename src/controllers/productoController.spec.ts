@@ -1,7 +1,7 @@
 const Productoo = require('../models/producto');
 const productoService = require('../services/productoService');
 const productoController = require('../controllers/productoController');
-const { ValidationError } = require('sequelize');
+const { ValidationErrorr } = require('sequelize');
 
 beforeEach(async () => {
   await Productoo.destroy({ where: {} });
@@ -43,8 +43,8 @@ describe('crear', () => {
   });
 
   test('should handle validation error and return status 400 with error details', async () => {
-    const validationError = new ValidationError('Validation failed', { errors: ['error1', 'error2'] });
-    productoService.crearProducto = jest.fn().mockRejectedValue(validationError);
+    const validationErrorr = new ValidationErrorr('Validation failed', { errors: ['error1', 'error2'] });
+    productoService.crearProducto = jest.fn().mockRejectedValue(validationErrorr);
 
     await productoController.crear(req, res);
 
@@ -52,7 +52,7 @@ describe('crear', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: 'Validación fallida',
-      errors: validationError.errors,
+      errors: validationErrorr.errors,
     });
   });
 
