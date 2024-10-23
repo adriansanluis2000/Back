@@ -2,10 +2,8 @@ const productoService = require('../services/productoService');
 
 exports.crear = async (req, res) => {
     try {
-        // Validación manual de los campos del producto
         const { nombre, precio, stock } = req.body;
 
-        // Reglas de validación (puedes ajustarlas según lo que necesites)
         if (!nombre || typeof nombre !== 'string') {
             return res.status(400).json({ message: "El nombre es requerido y debe ser una cadena de texto válida" });
         }
