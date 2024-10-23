@@ -1,18 +1,27 @@
-const { ValidationError } = require('sequelize');
 const Producto = require('../models/producto');
 
 class ProductoService {
     async crearProducto(datosProducto) {
+        if (!datosProducto.nombre || typeof datosProducto.nombre !== 'string') {
+            throw new Error("El nombre es requerido y debe ser una cadena de texto válida");
+        }
+
+        if (typeof datosProducto.precio !== 'number' || datosProducto.precio <= 0) {
+            throw new Error("El precio es requerido y debe ser un número positivo");
+        }
+
+        if (typeof datosProducto.stock !== 'number' || datosProducto.stock < 0) {
+            throw new Error("El stock es requerido y debe ser un número no negativo");
+        }
+
         try {
             const producto = await Producto.create(datosProducto);
             return producto;
         } catch (error) {
-            if (error instanceof ValidationError) {
-                throw new ValidationError('Error de validación', error.errors);
-            }
-            throw error;
+            throw new Error('Error al crear el producto: ' + error.message);
         }
     }
+
 
     async obtenerTodosLosProductos() {
         try {
@@ -42,7 +51,13 @@ class ProductoService {
                 throw new Error('Producto no encontrado');
             }
             await producto.update(datosParaActualizar);
-            return producto;
+            return {
+                id: producto.id,
+                nombre: producto.nombre,
+                precio: producto.precio,
+                stock: producto.stock,
+                ...datosParaActualizar,
+            };
         } catch (error) {
             throw new Error('Error al actualizar el producto: ' + error.message);
         }
