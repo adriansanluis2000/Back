@@ -1,13 +1,9 @@
 const Productoo = require('../models/producto');
 const productoService = require('../services/productoService');
 const productoController = require('../controllers/productoController');
-const { ValidationErrorr } = require('sequelize');
-
-beforeEach(async () => {
-  await Productoo.destroy({ where: {} });
-});
 
 jest.mock('../services/productoService', () => ({
+  crearProducto: jest.fn(),
   obtenerTodosLosProductos: jest.fn(),
   obtenerProductoPorId: jest.fn(),
   actualizarProducto: jest.fn(),
@@ -31,42 +27,58 @@ describe('crear', () => {
     jest.clearAllMocks();
   });
 
-  test('should create a product and return it with status 201', async () => {
-    const producto = { id: 1, name: 'Product 1' };
-    productoService.crearProducto = jest.fn().mockResolvedValue(producto);
+  test('debería devolver 400 si falta el nombre', async () => {
+    req.body = { precio: 100, categoria: 10 };
 
     await productoController.crear(req, res);
 
-    expect(productoService.crearProducto).toHaveBeenCalledWith(req.body);
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(producto);
-  });
-
-  test('should handle validation error and return status 400 with error details', async () => {
-    const validationErrorr = new ValidationErrorr('Validation failed', { errors: ['error1', 'error2'] });
-    productoService.crearProducto = jest.fn().mockRejectedValue(validationErrorr);
-
-    await productoController.crear(req, res);
-
-    expect(productoService.crearProducto).toHaveBeenCalledWith(req.body);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      message: 'Validación fallida',
-      errors: validationErrorr.errors,
-    });
+    expect(res.json).toHaveBeenCalledWith({ message: "El nombre es requerido y debe ser una cadena de texto válida" });
   });
 
-  test('should handle other errors and return status 404 with error message', async () => {
-    const errorMessage = 'Some error message';
-    productoService.crearProducto = jest.fn().mockRejectedValue(new Error(errorMessage));
+  test('debería devolver 400 si el precio no es válido', async () => {
+    req.body = { nombre: 'Gafas de sol', precio: -10, stock: 10 };
 
     await productoController.crear(req, res);
 
-    expect(productoService.crearProducto).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ message: "El precio es requerido y debe ser un número positivo" });
+  });
+
+  test('debería devolver 400 si falta la categoría', async () => {
+    req.body = { nombre: 'Gafas de sol', precio: 100 };
+
+    await productoController.crear(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ message: "La cantidad es requerida y debe ser un número positivo" });
+  });
+
+  test('debería crear un producto exitosamente y devolver status 201', async () => {
+    req.body = { id: 1, nombre: 'Product 1', precio: 20, stock: 10 };
+    const mockProducto = { id: 1, ...req.body };
+
+    jest.spyOn(productoService, 'crearProducto').mockResolvedValue(mockProducto);
+
+    await productoController.crear(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(mockProducto);
+  });
+
+  test('debería devolver un error 404 para otros errores', async () => {
+    req.body = { nombre: 'Gafas de sol', precio: 100, stock: 10 };
+
+    // Simula un error en el servicio
+    const error = new Error('Error de base de datos');
+    jest.spyOn(productoService, 'crearProducto').mockRejectedValue(error);
+
+    await productoController.crear(req, res);
+
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
-      message: 'Error al procesar la solicitud',
-      error: errorMessage,
+      message: "Error al procesar la solicitud",
+      error: error.message
     });
   });
 });
@@ -86,8 +98,8 @@ describe('listar', () => {
     jest.clearAllMocks();
   });
 
-  test('should return a list of products when successfully retrieved', async () => {
-    const productos = [{ id: 1, name: 'Product 1' }, { id: 2, name: 'Product 2' }];
+  test('Debería devolver una lista de productos cuando se recuperen correctamente', async () => {
+    const productos = [{ id: 1, nombre: 'Product 1' }, { id: 2, nombre: 'Product 2' }];
     productoService.obtenerTodosLosProductos.mockResolvedValueOnce(productos);
 
     await productoController.listar(req, res);
@@ -97,7 +109,7 @@ describe('listar', () => {
     expect(res.json).toHaveBeenCalledWith(productos);
   });
 
-  test('should return a 404 status and an error message when an error occurs', async () => {
+  test('Debería devolver un status 404 y un mensaje de error cuando ocurra un error', async () => {
     const errorMessage = 'Error retrieving products';
     productoService.obtenerTodosLosProductos.mockRejectedValueOnce(new Error(errorMessage));
 
@@ -114,8 +126,8 @@ describe('obtenerPorId', () => {
     jest.clearAllMocks();
   });
 
-  test('should return the product when it exists', async () => {
-    const mockProduct = { id: 1, name: 'Product 1' };
+  test('Debería devolver el producto cuando exista', async () => {
+    const mockProduct = { id: 1, nombre: 'Product 1' };
     productoService.obtenerProductoPorId.mockResolvedValue(mockProduct);
 
     const req = { params: { id: 1 } };
@@ -131,7 +143,7 @@ describe('obtenerPorId', () => {
     expect(res.json).toHaveBeenCalledWith(mockProduct);
   });
 
-  test('should return a 404 status and error message when the product does not exist', async () => {
+  test('Debería devolver un estado 404 y un mensaje de error cuando el producto no exista', async () => {
     productoService.obtenerProductoPorId.mockResolvedValue(null);
 
     const req = { params: { id: 1 } };
@@ -147,7 +159,7 @@ describe('obtenerPorId', () => {
     expect(res.json).toHaveBeenCalledWith({ message: 'Producto no encontrado' });
   });
 
-  test('should return a 404 status and error message when an error occurs', async () => {
+  test('Debería devolver un estado 404 y un mensaje de error cuando ocurra un error', async () => {
     const errorMessage = 'Internal server error';
     productoService.obtenerProductoPorId.mockRejectedValue(new Error(errorMessage));
 
@@ -170,30 +182,30 @@ describe('actualizar', () => {
     jest.clearAllMocks();
   });
 
-  test('should update the product and return the updated product', async () => {
+  test('Debería actualizar el producto y devolver el producto actualizado', async () => {
     const req = {
       params: { id: '123' },
-      body: { name: 'New Product' },
+      body: { nombre: 'New Product' },
     };
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
 
-    const updatedProduct = { id: '123', name: 'New Product' };
+    const updatedProduct = { id: '123', nombre: 'New Product' };
     productoService.actualizarProducto.mockResolvedValue(updatedProduct);
 
     await productoController.actualizar(req, res);
 
-    expect(productoService.actualizarProducto).toHaveBeenCalledWith('123', { name: 'New Product' });
+    expect(productoService.actualizarProducto).toHaveBeenCalledWith('123', { nombre: 'New Product' });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(updatedProduct);
   });
 
-  test('should handle errors and return a 404 status with an error message', async () => {
+  test('Debería manejar los errores y devolver un estado 404 con un mensaje de error', async () => {
     const req = {
       params: { id: '123' },
-      body: { name: 'New Product' },
+      body: { nombre: 'New Product' },
     };
     const res = {
       status: jest.fn().mockReturnThis(),
@@ -205,7 +217,7 @@ describe('actualizar', () => {
 
     await productoController.actualizar(req, res);
 
-    expect(productoService.actualizarProducto).toHaveBeenCalledWith('123', { name: 'New Product' });
+    expect(productoService.actualizarProducto).toHaveBeenCalledWith('123', { nombre: 'New Product' });
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: errorMessage });
   });
@@ -227,7 +239,7 @@ describe('eliminar', () => {
     jest.clearAllMocks();
   });
 
-  test('should delete the product and return success message', async () => {
+  test('Debería eliminar el producto y devolver un mensaje de éxito', async () => {
     await productoController.eliminar(req, res);
 
     expect(productoService.eliminarProducto).toHaveBeenCalledWith('123');
@@ -235,7 +247,7 @@ describe('eliminar', () => {
     expect(res.json).toHaveBeenCalledWith({ message: 'Producto eliminado con éxito' });
   });
 
-  test('should handle error and return error message', async () => {
+  test('Debería manejar el error y devolver un mensaje de error', async () => {
     const errorMessage = 'Product not found';
     productoService.eliminarProducto.mockRejectedValueOnce(new Error(errorMessage));
 

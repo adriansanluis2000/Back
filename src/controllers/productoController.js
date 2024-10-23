@@ -1,17 +1,27 @@
-const { ValidationError } = require('sequelize');
 const productoService = require('../services/productoService');
 
 exports.crear = async (req, res) => {
     try {
+        // Validación manual de los campos del producto
+        const { nombre, precio, stock } = req.body;
+
+        // Reglas de validación (puedes ajustarlas según lo que necesites)
+        if (!nombre || typeof nombre !== 'string') {
+            return res.status(400).json({ message: "El nombre es requerido y debe ser una cadena de texto válida" });
+        }
+
+        if (!precio || typeof precio !== 'number' || precio <= 0) {
+            return res.status(400).json({ message: "El precio es requerido y debe ser un número positivo" });
+        }
+
+        if (!stock || typeof stock !== 'number' || stock <= 0) {
+            return res.status(400).json({ message: "La cantidad es requerida y debe ser un número positivo" });
+        }
+
         const producto = await productoService.crearProducto(req.body);
         res.status(201).json(producto);
+
     } catch (error) {
-        if (error instanceof ValidationError) {
-            return res.status(400).json({
-                message: "Validación fallida",
-                errors: error.errors
-            });
-        }
         res.status(404).json({
             message: "Error al procesar la solicitud",
             error: error.message
