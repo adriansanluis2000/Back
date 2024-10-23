@@ -17,7 +17,8 @@ const Producto = sequelize.define('Producto', {
       notEmpty: {
         msg: 'El nombre del producto no puede estar vacío'
       },
-    }
+    },
+    unique: true
   },
   precio: {
     type: DataTypes.DECIMAL(10, 2),
