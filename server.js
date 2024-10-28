@@ -5,6 +5,7 @@ const cors = require('cors');
 
 const Producto = require('./src/models/producto');
 const productoRoutes = require('./src/routes/productoRoutes');
+const pedidoRoutes = require('./src/routes/pedidoRoutes');
 
 
 // Configura CORS
@@ -16,6 +17,7 @@ app.use(express.json()); // Para poder parsear el cuerpo de las solicitudes JSON
 
 // Definir rutas
 app.use('/api/productos', productoRoutes);
+app.use('/api/pedidos', pedidoRoutes);
 
 // Endpoint para verificar nombre de producto
 app.get('/verificar-nombre', async (req, res) => {
@@ -50,5 +52,14 @@ async function testDatabaseConnection() {
 }
 
 testDatabaseConnection();
+
+// Sincronización de modelos para crear las tablas
+sequelize.sync({ alter: true })  // 'force: true' recreará las tablas si ya existen (usa 'alter: true' para actualizar sin borrar)
+    .then(() => {
+        console.log('Tablas creadas correctamente.');
+    })
+    .catch(error => {
+        console.error('Error al crear las tablas:', error);
+    });
 
 module.exports = app;
