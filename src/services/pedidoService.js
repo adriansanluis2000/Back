@@ -17,6 +17,15 @@ class PedidoService {
                 throw new Error('Uno o más productos no existen en la base de datos.');
             }
 
+            // Verificar que la cantidad solicitada no supere el stock disponible
+            for (const producto of productos) {
+                const productoDb = productosExistentes.find(p => p.id === producto.id);
+
+                if (productoDb.stock < producto.cantidad) {
+                    throw new Error(`El producto "${productoDb.nombre}" no tiene suficiente stock. Stock disponible: ${productoDb.stock}, Cantidad solicitada: ${producto.cantidad}`);
+                }
+            }
+
             // Calcular el precio total
             const precioTotal = productosExistentes.reduce((total, producto) => {
                 const cantidad = productos.find(p => p.id === producto.id).cantidad;
@@ -38,11 +47,17 @@ class PedidoService {
                         productoId: producto.id,
                         cantidad: producto.cantidad
                     });
+
+                    // Actualizar la cantidad de cada producto en la base de datos
+                    const productoDb = productosExistentes.find(p => p.id === producto.id);
+                    await productoDb.update({
+                        stock: productoDb.stock - producto.cantidad
+                    });
                 })
             );
 
             // Retornar el pedido creado junto con los productos asociados
-            return nuevoPedido; 
+            return nuevoPedido;
         } catch (error) {
             console.error("Error al crear el pedido:", error); // Imprimir error en la consola
             throw new Error('Error al crear el pedido: ' + error.message); // Lanzar un error con un mensaje más claro

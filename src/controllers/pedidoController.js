@@ -6,7 +6,7 @@ class PedidoController {
       const pedido = await pedidoService.crearPedido(req.body);
       res.status(201).json({ mensaje: 'Pedido registrado con éxito', pedido });
     } catch (error) {
-      res.status(500).json({ mensaje: 'Error al crear el pedido', error: error.message });
+      res.status(500).json({ mensaje: error.message || 'Error al crear el pedido' });
     }
   }
 

@@ -13,17 +13,6 @@ const Pedido = sequelize.define('Pedido', {
         allowNull: false,
         defaultValue: DataTypes.NOW
     },
-    estado: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: 'pendiente',
-        validate: {
-            isIn: {
-                args: [['pendiente', 'enviado', 'completado', 'cancelado']],
-                msg: 'El estado debe ser uno de los valores permitidos'
-            }
-        }
-    },
     precioTotal: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
