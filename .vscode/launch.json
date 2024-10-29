@@ -11,19 +11,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${file}",
+            "program": "${workspaceFolder}/server.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
-        },
-        {
-            "name": "Attach by Process ID",
-            "port": 1234,
-            "request": "attach",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "pwa-node"
         },
         {
             "type": "node",
