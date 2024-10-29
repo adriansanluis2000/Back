@@ -3,7 +3,7 @@ const Producto = require('../models/producto');
 
 class PedidoService {
     async crearPedido(datosPedido) {
-        const { fecha, estado, productos } = datosPedido;
+        const { fecha, productos } = datosPedido;
 
         try {
             // Verificar si todos los productos existen
@@ -35,7 +35,6 @@ class PedidoService {
             // Crear el pedido principal
             const nuevoPedido = await Pedido.create({
                 fecha,
-                estado,
                 precioTotal
             });
 
@@ -59,8 +58,7 @@ class PedidoService {
             // Retornar el pedido creado junto con los productos asociados
             return nuevoPedido;
         } catch (error) {
-            console.error("Error al crear el pedido:", error); // Imprimir error en la consola
-            throw new Error('Error al crear el pedido: ' + error.message); // Lanzar un error con un mensaje más claro
+            throw new Error('Error al crear el pedido: ' + error.message);
         }
 
     }
@@ -71,12 +69,11 @@ class PedidoService {
                 include: {
                     model: Producto,
                     through: {
-                        attributes: ['cantidad'] // Solo traer el campo `cantidad` de la tabla intermedia
+                        attributes: ['cantidad']
                     }
                 }
             });
         } catch (error) {
-            console.error("Error al obtener los pedidos:", error);
             throw new Error('Error al obtener los pedidos: ' + error.message);
         }
     }
@@ -98,26 +95,7 @@ class PedidoService {
 
             return pedido;
         } catch (error) {
-            console.error("Error al obtener el pedido:", error);
             throw new Error('Error al obtener el pedido: ' + error.message);
-        }
-    }
-
-    async actualizarEstadoPedido(id, estado) {
-        try {
-            const [updatedCount, updatedRows] = await Pedido.update(
-                { estado },
-                { where: { id }, returning: true } // `returning: true` permite obtener el pedido actualizado
-            );
-
-            if (updatedCount === 0) {
-                throw new Error('Pedido no encontrado.');
-            }
-
-            return updatedRows[0];
-        } catch (error) {
-            console.error("Error al actualizar el estado del pedido:", error);
-            throw new Error('Error al actualizar el estado del pedido: ' + error.message);
         }
     }
 
@@ -133,7 +111,6 @@ class PedidoService {
 
             return { mensaje: 'Pedido eliminado con éxito.' };
         } catch (error) {
-            console.error("Error al eliminar el pedido:", error);
             throw new Error('Error al eliminar el pedido: ' + error.message);
         }
     }

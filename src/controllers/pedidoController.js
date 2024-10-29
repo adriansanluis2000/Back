@@ -31,18 +31,6 @@ class PedidoController {
     }
   }
 
-  async actualizarEstadoPedido(req, res) {
-    try {
-      const pedidoActualizado = await pedidoService.actualizarEstadoPedido(req.params.id, req.body.estado);
-      if (!pedidoActualizado) {
-        return res.status(404).json({ mensaje: 'Pedido no encontrado' });
-      }
-      res.status(200).json(pedidoActualizado);
-    } catch (error) {
-      res.status(500).json({ mensaje: 'Error al actualizar el estado del pedido', error });
-    }
-  }
-
   async eliminarPedido(req, res) {
     try {
       const pedidoEliminado = await pedidoService.eliminarPedido(req.params.id);

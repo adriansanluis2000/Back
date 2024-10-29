@@ -11,9 +11,6 @@ router.get('/', pedidoController.obtenerPedidos);
 // Obtener un pedido por ID
 router.get('/:id', pedidoController.obtenerPedidoPorId);
 
-// Actualizar el estado de un pedido
-router.put('/:id', pedidoController.actualizarEstadoPedido);
-
 // Eliminar un pedido
 router.delete('/:id', pedidoController.eliminarPedido);
 
