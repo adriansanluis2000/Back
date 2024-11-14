@@ -114,6 +114,72 @@ class PedidoService {
             throw new Error('Error al eliminar el pedido: ' + error.message);
         }
     }
+
+    async actualizarPedido(id, datosPedido) {
+        const { productos } = datosPedido;
+
+        try {
+            // Encontrar el pedido
+            const pedido = await Pedido.findByPk(id, {
+                include: {
+                    model: Producto,
+                    through: { attributes: ['cantidad'] }
+                }
+            });
+
+            if (!pedido) {
+                throw new Error('Pedido no encontrado.');
+            }
+
+            // Revertir el stock de productos del pedido actual
+            for (const pedidoProducto of pedido.Productos) {
+                const productoDb = await Producto.findByPk(pedidoProducto.id);
+                await productoDb.update({
+                    stock: productoDb.stock + pedidoProducto.PedidoProducto.cantidad
+                });
+            }
+
+            // Verificar el stock y actualizar las cantidades
+            for (const producto of productos) {
+                const productoDb = await Producto.findByPk(producto.id);
+
+                if (!productoDb) {
+                    throw new Error(`Producto con ID ${producto.id} no encontrado.`);
+                }
+
+                if (productoDb.stock < producto.cantidad) {
+                    throw new Error(`El producto "${productoDb.nombre}" no tiene suficiente stock.`);
+                }
+            }
+
+            // Actualizar el pedido con los nuevos productos
+            await PedidoProducto.destroy({ where: { pedidoId: id } });
+
+            const nuevoTotal = await Promise.all(
+                productos.map(async (producto) => {
+                    await PedidoProducto.create({
+                        pedidoId: pedido.id,
+                        productoId: producto.id,
+                        cantidad: producto.cantidad
+                    });
+
+                    const productoDb = await Producto.findByPk(producto.id);
+                    await productoDb.update({ stock: productoDb.stock - producto.cantidad });
+
+                    return productoDb.precio * producto.cantidad;
+                })
+            ).then((totales) => totales.reduce((acc, val) => acc + val, 0));
+
+            // Guardar el total del pedido actualizado
+            await pedido.update({ precioTotal: nuevoTotal });
+
+            // Retornar el pedido actualizado
+            return await this.obtenerPedidoPorId(id);
+        } catch (error) {
+            throw new Error('Error al actualizar el pedido: ' + error.message);
+        }
+    }
+
 }
 
 module.exports = new PedidoService();

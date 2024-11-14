@@ -14,4 +14,7 @@ router.get('/:id', pedidoController.obtenerPedidoPorId);
 // Eliminar un pedido
 router.delete('/:id', pedidoController.eliminarPedido);
 
+// Actualizar un pedido existente
+router.put('/:id', pedidoController.actualizarPedido);
+
 module.exports = router;

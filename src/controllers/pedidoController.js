@@ -42,6 +42,23 @@ class PedidoController {
       res.status(500).json({ mensaje: 'Error al eliminar el pedido', error });
     }
   }
+
+  async actualizarPedido(req, res) {
+    try {
+      const pedidoId = req.params.id;
+      const datosPedido = req.body;
+      const pedidoActualizado = await pedidoService.actualizarPedido(pedidoId, datosPedido);
+
+      if (!pedidoActualizado) {
+        return res.status(404).json({ mensaje: 'Pedido no encontrado' });
+      }
+
+      res.status(200).json({ mensaje: 'Pedido actualizado con éxito', pedido: pedidoActualizado });
+    } catch (error) {
+      res.status(500).json({ mensaje: error.message || 'Error al actualizar el pedido' });
+    }
+  }
+
 }
 
 module.exports = new PedidoController();
