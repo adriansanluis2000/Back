@@ -7,7 +7,7 @@ describe('PedidoController', () => {
     let req, res;
 
     beforeEach(() => {
-        req = { body: {}, params: {} };
+        req = { body: {}, params: {}, query: {} };
         res = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn(),
@@ -26,18 +26,29 @@ describe('PedidoController', () => {
         });
 
         it('debería manejar errores al crear un pedido', async () => {
-            const error = new Error('Error de servicio');
+            const error = new Error('Error al crear el pedido');
             pedidoService.crearPedido.mockRejectedValue(error);
 
             await pedidoController.crearPedido(req, res);
 
             expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({ mensaje: 'Error de servicio' });
+            expect(res.json).toHaveBeenCalledWith({ mensaje: 'Error al crear el pedido', error });
         });
     });
 
     describe('obtenerPedidos', () => {
         it('debería obtener todos los pedidos', async () => {
+            const pedidos = [{ id: 1, item: 'producto' }];
+            pedidoService.obtenerPedidos.mockResolvedValue(pedidos);
+
+            await pedidoController.obtenerPedidos(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith(pedidos);
+        });
+
+        it('debería obtener pedidos filtrados por tipo', async () => {
+            req.query.tipo = 'entrante';
             const pedidos = [{ id: 1, item: 'producto' }];
             pedidoService.obtenerPedidos.mockResolvedValue(pedidos);
 
@@ -122,6 +133,49 @@ describe('PedidoController', () => {
 
             expect(res.status).toHaveBeenCalledWith(500);
             expect(res.json).toHaveBeenCalledWith({ mensaje: 'Error al eliminar el pedido', error });
+        });
+    });
+
+    describe('actualizarPedido', () => {
+        it('debería actualizar un pedido con éxito', async () => {
+            req.params.id = '1';
+            req.body = { item: 'producto actualizado', cantidad: 5 };
+
+            const pedidoActualizado = { id: 1, item: 'producto actualizado', cantidad: 5 };
+            pedidoService.actualizarPedido.mockResolvedValue(pedidoActualizado);
+
+            await pedidoController.actualizarPedido(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                mensaje: 'Pedido actualizado con éxito',
+                pedido: pedidoActualizado,
+            });
+        });
+
+        it('debería devolver 404 si el pedido no es encontrado', async () => {
+            req.params.id = '2';
+            req.body = { item: 'producto actualizado', cantidad: 5 };
+
+            pedidoService.actualizarPedido.mockResolvedValue(null);
+
+            await pedidoController.actualizarPedido(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.json).toHaveBeenCalledWith({ mensaje: 'Pedido no encontrado' });
+        });
+
+        it('debería manejar errores al actualizar el pedido', async () => {
+            req.params.id = '1';
+            req.body = { item: 'producto actualizado', cantidad: 5 };
+
+            const error = new Error('Error al actualizar el pedido');
+            pedidoService.actualizarPedido.mockRejectedValue(error);
+
+            await pedidoController.actualizarPedido(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({ mensaje: 'Error al actualizar el pedido', error });
         });
     });
 });

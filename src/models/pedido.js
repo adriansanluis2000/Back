@@ -23,6 +23,10 @@ const Pedido = sequelize.define('Pedido', {
                 msg: 'El precio total debe ser al menos 0.00'
             }
         }
+    },
+    tipo: {
+        type: DataTypes.ENUM('entrante', 'saliente'),
+        allowNull: false
     }
 }, {
     timestamps: false,

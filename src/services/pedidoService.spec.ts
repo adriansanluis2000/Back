@@ -1,6 +1,7 @@
 const PedidoService = require('../services/pedidoService');
 const { Pedido, PedidoProducto } = require('../models/pedido');
 const Producto = require('../models/producto');
+const { Op } = require('sequelize');
 
 jest.mock('../models/pedido', () => {
     return {
@@ -33,7 +34,8 @@ describe('PedidoService', () => {
             productos: [
                 { id: 1, cantidad: 2 },
                 { id: 2, cantidad: 3 }
-            ]
+            ],
+            tipo: 'entrante'
         };
     });
 
@@ -64,23 +66,78 @@ describe('PedidoService', () => {
             await expect(PedidoService.crearPedido(datosPedido)).rejects.toThrow('Uno o más productos no existen en la base de datos.');
         });
 
-        it('debería lanzar un error si la cantidad solicitada supera el stock', async () => {
-            Producto.findAll.mockResolvedValue([
-                { id: 1, stock: 1, precio: 100, nombre: 'Producto 1' },
-                { id: 2, stock: 10, precio: 50, nombre: 'Producto 2' }
-            ]);
+        it('debería lanzar un error si el tipo es "entrante" y el stock es insuficiente', async () => {
+            const mockProducto1 = { id: 1, stock: 1, precio: 100, nombre: 'Producto 1' };
+            const mockProducto2 = { id: 2, stock: 10, precio: 50, nombre: 'Producto 2' };
 
-            await expect(PedidoService.crearPedido(datosPedido)).rejects.toThrow('El producto "Producto 1" no tiene suficiente stock.');
+            Producto.findAll.mockResolvedValue([mockProducto1, mockProducto2]);
+
+            const datosPedidoEntranteConError = {
+                fecha: new Date(),
+                productos: [
+                    { id: 1, cantidad: 2 },
+                    { id: 2, cantidad: 3 }
+                ],
+                tipo: 'entrante'
+            };
+
+            await expect(PedidoService.crearPedido(datosPedidoEntranteConError)).rejects.toThrow('Error al crear el pedido: El producto "Producto 1" no tiene suficiente stock.');
         });
 
-        it('debería lanzar un error si ocurre un problema al crear el pedido', async () => {
-            Producto.findAll.mockResolvedValue([
-                { id: 1, stock: 5, precio: 100, nombre: 'Producto 1' },
-                { id: 2, stock: 10, precio: 50, nombre: 'Producto 2' }
-            ]);
-            Pedido.create.mockRejectedValue(new Error('Error al guardar el pedido'));
+        it('debería crear un pedido tipo "entrante" y actualizar el stock correctamente', async () => {
+            const mockProducto1 = { id: 1, stock: 5, precio: 100, nombre: 'Producto 1', update: jest.fn() };
+            const mockProducto2 = { id: 2, stock: 10, precio: 50, nombre: 'Producto 2', update: jest.fn() };
 
-            await expect(PedidoService.crearPedido(datosPedido)).rejects.toThrow('Error al crear el pedido: Error al guardar el pedido');
+            Producto.findAll.mockResolvedValue([mockProducto1, mockProducto2]);
+            Pedido.create.mockResolvedValue({ id: 1 });
+
+            const datosPedidoEntrante = {
+                fecha: new Date(),
+                productos: [
+                    { id: 1, cantidad: 2 },
+                    { id: 2, cantidad: 3 }
+                ],
+                tipo: 'entrante'
+            };
+
+            const resultado = await PedidoService.crearPedido(datosPedidoEntrante);
+
+            expect(Pedido.create).toHaveBeenCalled();
+            expect(PedidoProducto.create).toHaveBeenCalledTimes(2);
+
+            // Verificar actualización de stock
+            expect(mockProducto1.update).toHaveBeenCalledWith({ stock: 3 }); // 5 - 2
+            expect(mockProducto2.update).toHaveBeenCalledWith({ stock: 7 }); // 10 - 3
+
+            expect(resultado).toEqual({ id: 1 });
+        });
+
+        it('debería crear un pedido tipo "saliente" y actualizar el stock correctamente', async () => {
+            const mockProducto1 = { id: 1, stock: 5, precio: 100, nombre: 'Producto 1', update: jest.fn() };
+            const mockProducto2 = { id: 2, stock: 10, precio: 50, nombre: 'Producto 2', update: jest.fn() };
+
+            Producto.findAll.mockResolvedValue([mockProducto1, mockProducto2]);
+            Pedido.create.mockResolvedValue({ id: 1 });
+
+            const datosPedidoSaliente = {
+                fecha: new Date(),
+                productos: [
+                    { id: 1, cantidad: 2 },
+                    { id: 2, cantidad: 3 }
+                ],
+                tipo: 'saliente'
+            };
+
+            const resultado = await PedidoService.crearPedido(datosPedidoSaliente);
+
+            expect(Pedido.create).toHaveBeenCalled();
+            expect(PedidoProducto.create).toHaveBeenCalledTimes(2);
+
+            // Verificar actualización de stock
+            expect(mockProducto1.update).toHaveBeenCalledWith({ stock: 7 }); // 5 + 2
+            expect(mockProducto2.update).toHaveBeenCalledWith({ stock: 13 }); // 10 + 3
+
+            expect(resultado).toEqual({ id: 1 });
         });
     });
 
@@ -99,6 +156,30 @@ describe('PedidoService', () => {
 
             await expect(PedidoService.obtenerPedidos()).rejects.toThrow('Error al obtener los pedidos: Error al obtener pedidos');
         });
+
+        it('debería obtener solo los pedidos de tipo "entrante"', async () => {
+            const mockPedido = { id: 1, tipo: 'entrante' };
+
+            Pedido.findAll.mockResolvedValue([mockPedido]);
+
+            const resultados = await PedidoService.obtenerPedidos('entrante');
+
+            expect(Pedido.findAll).toHaveBeenCalledWith({ where: { tipo: { [Op.eq]: 'entrante' } }, include: expect.any(Object) });
+            expect(resultados).toEqual([mockPedido]);
+        });
+
+        it('debería obtener todos los pedidos si no se especifica tipo', async () => {
+            const mockPedido1 = { id: 1, tipo: 'entrante' };
+            const mockPedido2 = { id: 2, tipo: 'saliente' };
+
+            Pedido.findAll.mockResolvedValue([mockPedido1, mockPedido2]);
+
+            const resultados = await PedidoService.obtenerPedidos();
+
+            expect(Pedido.findAll).toHaveBeenCalledWith({ where: {}, include: expect.any(Object) });
+            expect(resultados).toEqual([mockPedido1, mockPedido2]);
+        });
+
     });
 
     describe('obtenerPedidoPorId', () => {
@@ -147,4 +228,139 @@ describe('PedidoService', () => {
             await expect(PedidoService.eliminarPedido(1)).rejects.toThrow('Error al eliminar el pedido: Error al eliminar el pedido');
         });
     });
+
+    describe('actualizarPedido', () => {
+        it('debería actualizar un pedido con éxito', async () => {
+            const id = 1;
+            const datosPedido = {
+                productos: [
+                    { id: 1, cantidad: 2 },
+                    { id: 2, cantidad: 1 }
+                ],
+                tipo: 'entrante'
+            };
+
+            const pedidoMock = {
+                id: 1,
+                Productos: [
+                    { id: 1, PedidoProducto: { cantidad: 1 } },
+                    { id: 2, PedidoProducto: { cantidad: 1 } }
+                ],
+                tipo: 'saliente',
+                update: jest.fn(),
+                precioTotal: 100
+            };
+
+            const productoMock1 = { id: 1, stock: 10, precio: 50, update: jest.fn() };
+            const productoMock2 = { id: 2, stock: 5, precio: 30, update: jest.fn() };
+
+            Pedido.findByPk = jest.fn().mockResolvedValue(pedidoMock);
+            Producto.findByPk = jest.fn().mockImplementation((id) => {
+                return id === 1 ? productoMock1 : id === 2 ? productoMock2 : null;
+            });
+            PedidoProducto.destroy = jest.fn().mockResolvedValue(true);
+            PedidoProducto.create = jest.fn().mockResolvedValue(true);
+
+            const resultado = await PedidoService.actualizarPedido(id, datosPedido);
+
+            expect(Pedido.findByPk).toHaveBeenCalledWith(id, expect.any(Object));
+            expect(Producto.findByPk).toHaveBeenCalledWith(1);
+            expect(Producto.findByPk).toHaveBeenCalledWith(2);
+            expect(pedidoMock.update).toHaveBeenCalledWith({ precioTotal: expect.any(Number), tipo: 'entrante' });
+            expect(resultado).toHaveProperty('id', id);
+        });
+
+        it('debería lanzar un error si no se encuentra el pedido', async () => {
+            const id = 9999; // Un id que no existe
+            const datosPedido = {
+                productos: [
+                    { id: 1, cantidad: 2 }
+                ],
+                tipo: 'entrante'
+            };
+
+            Pedido.findByPk = jest.fn().mockResolvedValue(null);
+
+            await expect(PedidoService.actualizarPedido(id, datosPedido)).rejects.toThrow('Pedido no encontrado.');
+        });
+
+        it('debería lanzar un error si un producto no se encuentra', async () => {
+            const id = 1;
+            const datosPedido = {
+                productos: [
+                    { id: 999, cantidad: 2 } // Producto que no existe
+                ],
+                tipo: 'entrante'
+            };
+
+            const pedidoMock = { id: 1, Productos: [], tipo: 'saliente', update: jest.fn() };
+            Pedido.findByPk = jest.fn().mockResolvedValue(pedidoMock);
+            Producto.findByPk = jest.fn().mockResolvedValue(null); // Simulamos que no existe el producto
+
+            // Esperar que se lance un error
+            await expect(PedidoService.actualizarPedido(id, datosPedido)).rejects.toThrow('Producto con ID 999 no encontrado.');
+        });
+
+        it('debería lanzar un error si no hay suficiente stock de un producto', async () => {
+            const id = 1;
+            const datosPedido = {
+                productos: [
+                    { id: 1, cantidad: 15 } // Más cantidad de la que hay en stock
+                ],
+                tipo: 'entrante'
+            };
+
+            const pedidoMock = { id: 1, Productos: [], tipo: 'saliente', update: jest.fn() };
+            const productoMock = { id: 1, stock: 10, precio: 50, update: jest.fn() };
+
+            Pedido.findByPk = jest.fn().mockResolvedValue(pedidoMock);
+            Producto.findByPk = jest.fn().mockResolvedValue(productoMock);
+
+            await expect(PedidoService.actualizarPedido(id, datosPedido)).rejects.toThrow('Error al actualizar el pedido: El producto "1" no tiene suficiente stock.');
+        });
+
+        it('debería manejar errores inesperados', async () => {
+            const id = 1;
+            const datosPedido = {
+                productos: [
+                    { id: 1, cantidad: 2 }
+                ],
+                tipo: 'entrante'
+            };
+
+            // Forzamos un error en la búsqueda del pedido
+            Pedido.findByPk = jest.fn().mockRejectedValue(new Error('Error interno'));
+
+            await expect(PedidoService.actualizarPedido(id, datosPedido)).rejects.toThrow('Error al actualizar el pedido: Error interno');
+        });
+
+        it('debería revertir el stock de los productos si el pedido es de tipo "entrante"', async () => {
+            const id = 1;
+            const datosPedido = {
+                productos: [{ id: 1, cantidad: 2 }],
+                tipo: 'saliente', // Nuevo tipo del pedido
+            };
+
+            const pedidoMock = {
+                id: 1,
+                tipo: 'entrante', // Tipo original es "entrante"
+                Productos: [
+                    { id: 1, PedidoProducto: { cantidad: 5 } },
+                ],
+                update: jest.fn(),
+            };
+
+            const productoMock = { id: 1, stock: 10, update: jest.fn() };
+
+            Pedido.findByPk = jest.fn().mockResolvedValue(pedidoMock);
+            Producto.findByPk = jest.fn().mockResolvedValue(productoMock);
+            PedidoProducto.destroy = jest.fn().mockResolvedValue(true);
+
+            await PedidoService.actualizarPedido(id, datosPedido);
+
+            // Verifica que el stock se incrementa al revertir el pedido tipo "entrante"
+            expect(productoMock.update).toHaveBeenCalledWith({ stock: 15 }); // 10 + 5 (stock actual + cantidad del pedido previo)
+        });
+
+    })
 });

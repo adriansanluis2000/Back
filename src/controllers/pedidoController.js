@@ -6,13 +6,14 @@ class PedidoController {
       const pedido = await pedidoService.crearPedido(req.body);
       res.status(201).json({ mensaje: 'Pedido registrado con éxito', pedido });
     } catch (error) {
-      res.status(500).json({ mensaje: error.message || 'Error al crear el pedido' });
+      res.status(500).json({ mensaje: 'Error al crear el pedido', error });
     }
   }
 
   async obtenerPedidos(req, res) {
     try {
-      const pedidos = await pedidoService.obtenerPedidos();
+      const tipo = req.query.tipo;
+      const pedidos = await pedidoService.obtenerPedidos(tipo);
       res.status(200).json(pedidos);
     } catch (error) {
       res.status(500).json({ mensaje: 'Error al obtener los pedidos', error });
@@ -55,7 +56,7 @@ class PedidoController {
 
       res.status(200).json({ mensaje: 'Pedido actualizado con éxito', pedido: pedidoActualizado });
     } catch (error) {
-      res.status(500).json({ mensaje: error.message || 'Error al actualizar el pedido' });
+      res.status(500).json({ mensaje: 'Error al actualizar el pedido', error });
     }
   }
 

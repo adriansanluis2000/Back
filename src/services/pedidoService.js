@@ -1,9 +1,10 @@
 const { Pedido, PedidoProducto } = require('../models/pedido');
 const Producto = require('../models/producto');
+const { Op } = require('sequelize');
 
 class PedidoService {
     async crearPedido(datosPedido) {
-        const { fecha, productos } = datosPedido;
+        const { fecha, productos, tipo } = datosPedido;
 
         try {
             // Verificar si todos los productos existen
@@ -18,11 +19,13 @@ class PedidoService {
             }
 
             // Verificar que la cantidad solicitada no supere el stock disponible
-            for (const producto of productos) {
-                const productoDb = productosExistentes.find(p => p.id === producto.id);
+            if (tipo === 'entrante') {
+                for (const producto of productos) {
+                    const productoDb = productosExistentes.find(p => p.id === producto.id);
 
-                if (productoDb.stock < producto.cantidad) {
-                    throw new Error(`El producto "${productoDb.nombre}" no tiene suficiente stock. Stock disponible: ${productoDb.stock}, Cantidad solicitada: ${producto.cantidad}`);
+                    if (productoDb.stock < producto.cantidad) {
+                        throw new Error(`El producto "${productoDb.nombre}" no tiene suficiente stock. Stock disponible: ${productoDb.stock}, Cantidad solicitada: ${producto.cantidad}`);
+                    }
                 }
             }
 
@@ -35,7 +38,8 @@ class PedidoService {
             // Crear el pedido principal
             const nuevoPedido = await Pedido.create({
                 fecha,
-                precioTotal
+                precioTotal,
+                tipo
             });
 
             // Asociar productos al pedido con sus cantidades en la tabla intermedia
@@ -47,11 +51,14 @@ class PedidoService {
                         cantidad: producto.cantidad
                     });
 
-                    // Actualizar la cantidad de cada producto en la base de datos
+                    // Actualizar stock según el tipo de pedido
                     const productoDb = productosExistentes.find(p => p.id === producto.id);
-                    await productoDb.update({
-                        stock: productoDb.stock - producto.cantidad
-                    });
+                    const stockNuevo =
+                        tipo === 'entrante'
+                            ? productoDb.stock - producto.cantidad
+                            : productoDb.stock + producto.cantidad;
+
+                    await productoDb.update({ stock: stockNuevo });
                 })
             );
 
@@ -63,9 +70,11 @@ class PedidoService {
 
     }
 
-    async obtenerPedidos() {
+    async obtenerPedidos(tipo) {
         try {
+            const filtros = tipo ? { tipo: { [Op.eq]: tipo } } : {}; // Si se proporciona un tipo, se filtra; de lo contrario, no aplica filtro
             return await Pedido.findAll({
+                where: filtros,
                 include: {
                     model: Producto,
                     through: {
@@ -77,6 +86,7 @@ class PedidoService {
             throw new Error('Error al obtener los pedidos: ' + error.message);
         }
     }
+
 
     async obtenerPedidoPorId(id) {
         try {
@@ -116,7 +126,7 @@ class PedidoService {
     }
 
     async actualizarPedido(id, datosPedido) {
-        const { productos } = datosPedido;
+        const { productos, tipo } = datosPedido;
 
         try {
             // Encontrar el pedido
@@ -134,21 +144,26 @@ class PedidoService {
             // Revertir el stock de productos del pedido actual
             for (const pedidoProducto of pedido.Productos) {
                 const productoDb = await Producto.findByPk(pedidoProducto.id);
-                await productoDb.update({
-                    stock: productoDb.stock + pedidoProducto.PedidoProducto.cantidad
-                });
+                const stockNuevo =
+                    pedido.tipo === 'entrante'
+                        ? productoDb.stock + pedidoProducto.PedidoProducto.cantidad
+                        : productoDb.stock - pedidoProducto.PedidoProducto.cantidad;
+
+                await productoDb.update({ stock: stockNuevo });
             }
 
             // Verificar el stock y actualizar las cantidades
-            for (const producto of productos) {
-                const productoDb = await Producto.findByPk(producto.id);
+            if (tipo === 'entrante') {
+                for (const producto of productos) {
+                    const productoDb = await Producto.findByPk(producto.id);
 
-                if (!productoDb) {
-                    throw new Error(`Producto con ID ${producto.id} no encontrado.`);
-                }
+                    if (!productoDb) {
+                        throw new Error(`Producto con ID ${producto.id} no encontrado.`);
+                    }
 
-                if (productoDb.stock < producto.cantidad) {
-                    throw new Error(`El producto "${productoDb.nombre}" no tiene suficiente stock.`);
+                    if (productoDb.stock < producto.cantidad) {
+                        throw new Error(`El producto "${productoDb.id}" no tiene suficiente stock.`);
+                    }
                 }
             }
 
@@ -164,14 +179,19 @@ class PedidoService {
                     });
 
                     const productoDb = await Producto.findByPk(producto.id);
-                    await productoDb.update({ stock: productoDb.stock - producto.cantidad });
+                    const stockNuevo =
+                        tipo === 'entrante'
+                            ? productoDb.stock - producto.cantidad
+                            : productoDb.stock + producto.cantidad;
+
+                    await productoDb.update({ stock: stockNuevo });
 
                     return productoDb.precio * producto.cantidad;
                 })
             ).then((totales) => totales.reduce((acc, val) => acc + val, 0));
 
             // Guardar el total del pedido actualizado
-            await pedido.update({ precioTotal: nuevoTotal });
+            await pedido.update({ precioTotal: nuevoTotal, tipo });
 
             // Retornar el pedido actualizado
             return await this.obtenerPedidoPorId(id);

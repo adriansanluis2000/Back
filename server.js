@@ -54,7 +54,7 @@ async function testDatabaseConnection() {
 testDatabaseConnection();
 
 // Sincronización de modelos para crear las tablas
-sequelize.sync({ alter: true })  // 'force: true' recreará las tablas si ya existen (usa 'alter: true' para actualizar sin borrar)
+sequelize.sync({ alter: true })  // 'force: true' recreará las tablas si ya existen ('alter: true' actualiza sin borrar)
     .then(() => {
         console.log('Tablas creadas correctamente.');
     })
