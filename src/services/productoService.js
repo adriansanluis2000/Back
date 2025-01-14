@@ -10,8 +10,16 @@ class ProductoService {
             throw new Error("El precio es requerido y debe ser un número positivo");
         }
 
-        if (typeof datosProducto.stock !== 'number' || datosProducto.stock < 0) {
-            throw new Error("El stock es requerido y debe ser un número no negativo");
+        if (typeof datosProducto.stock !== 'number' || datosProducto.stock < 1) {
+            throw new Error("El stock es requerido y debe ser un número entero mayor o igual a 1");
+        }
+
+        if (typeof datosProducto.umbral !== 'number' || datosProducto.umbral < 1) {
+            throw new Error("El umbral es requerido y debe ser un número entero mayor o igual a 1");
+        }
+
+        if (datosProducto.umbral > datosProducto.stock) {
+            throw new Error("El umbral no puede ser mayor que el stock disponible");
         }
 
         try {
@@ -56,6 +64,7 @@ class ProductoService {
                 nombre: producto.nombre,
                 precio: producto.precio,
                 stock: producto.stock,
+                umbral: producto.umbral,
                 ...datosParaActualizar,
             };
         } catch (error) {

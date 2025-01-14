@@ -52,6 +52,22 @@ const Producto = sequelize.define('Producto', {
       }
     }
   },
+  umbral: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'El umbral es obligatorio'
+      },
+      isInt: {
+        msg: 'El umbral debe ser un número entero'
+      },
+      min: {
+        args: [1],
+        msg: 'El umbral debe ser al menos 1'
+      }
+    }
+  },
   descripcion: {
     type: DataTypes.TEXT,
     allowNull: true

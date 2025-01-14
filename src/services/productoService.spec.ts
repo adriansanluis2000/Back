@@ -7,25 +7,37 @@ describe('ProductoService', () => {
 
     describe('crearProducto', () => {
         it('debería lanzar un error si el nombre es inválido', async () => {
-            const datosProducto = { nombre: '', precio: 100, stock: 10 };
+            const datosProducto = { nombre: '', precio: 100, stock: 10, umbral: 5 };
 
             await expect(productoServicee.crearProducto(datosProducto)).rejects.toThrow("El nombre es requerido y debe ser una cadena de texto válida");
         });
 
         it('debería lanzar un error si el precio no es un número positivo', async () => {
-            const datosProducto = { nombre: 'Producto 1', precio: -50, stock: 10 };
+            const datosProducto = { nombre: 'Producto 1', precio: -50, stock: 10, umbral: 5 };
 
             await expect(productoServicee.crearProducto(datosProducto)).rejects.toThrow("El precio es requerido y debe ser un número positivo");
         });
 
-        it('debería lanzar un error si el stock no es un número no negativo', async () => {
-            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: -1 };
+        it('debería lanzar un error si el stock no es un número entero mayor o igual a 1', async () => {
+            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: -1, umbral: 5 };
 
-            await expect(productoServicee.crearProducto(datosProducto)).rejects.toThrow("El stock es requerido y debe ser un número no negativo");
+            await expect(productoServicee.crearProducto(datosProducto)).rejects.toThrow("El stock es requerido y debe ser un número entero mayor o igual a 1");
+        });
+
+        it('debería lanzar un error si el umbral no es un número entero mayor o igual a 1', async () => {
+            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: 10, umbral: -5 };
+
+            await expect(productoServicee.crearProducto(datosProducto)).rejects.toThrow("El umbral es requerido y debe ser un número entero mayor o igual a 1");
+        });
+
+        it('debería lanzar un error si el umbral no es un número entero mayor o igual a 1', async () => {
+            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: 10, umbral: 50 };
+
+            await expect(productoServicee.crearProducto(datosProducto)).rejects.toThrow("El umbral no puede ser mayor que el stock disponible");
         });
 
         it('debería crear un producto exitosamente y devolverlo', async () => {
-            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: 10 };
+            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: 10, umbral: 5 };
             const productoMock = { id: 1, ...datosProducto };
 
             Producto.create.mockResolvedValue(productoMock);
@@ -37,7 +49,7 @@ describe('ProductoService', () => {
         });
 
         it('debería lanzar un error si ocurre un error al crear el producto', async () => {
-            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: 10 };
+            const datosProducto = { nombre: 'Producto 1', precio: 100, stock: 10, umbral: 5 };
             const errorMock = new Error('Error al crear el producto');
 
             Producto.create.mockRejectedValue(errorMock);
@@ -100,7 +112,7 @@ describe('ProductoService', () => {
 
     describe('actualizarProducto', () => {
         it('debería actualizar un producto y devolverlo', async () => {
-            const productoMock = { id: 1, nombre: 'Producto 1', precio: 10, stock: 20 };
+            const productoMock = { id: 1, nombre: 'Producto 1', precio: 10, stock: 20, umbral: 10 };
             const datosParaActualizar = { nombre: 'Producto Actualizado' };
             const idMock = 1;
 
