@@ -200,6 +200,37 @@ class PedidoService {
         }
     }
 
+    async devolverStock(id) {
+        try {
+            // Encontrar el pedido con los productos asociados
+            const pedido = await Pedido.findByPk(id, {
+                include: {
+                    model: Producto,
+                    through: { attributes: ['cantidad'] }
+                }
+            });
+
+            if (!pedido) {
+                throw new Error('Pedido no encontrado.');
+            }
+
+            // Restaurar el stock de cada producto del pedido
+            for (const pedidoProducto of pedido.Productos) {
+                const productoDb = await Producto.findByPk(pedidoProducto.id);
+                const stockNuevo = productoDb.stock + pedidoProducto.PedidoProducto.cantidad;
+                await productoDb.update({ stock: stockNuevo });
+            }
+
+            // Eliminar el pedido después de devolver el stock
+            await Pedido.destroy({ where: { id } });
+
+            return { mensaje: 'Stock devuelto y pedido eliminado con éxito.' };
+        } catch (error) {
+            throw new Error('Error al devolver el stock: ' + error.message);
+        }
+    }
+
+
 }
 
 module.exports = new PedidoService();

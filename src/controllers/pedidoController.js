@@ -60,6 +60,15 @@ class PedidoController {
     }
   }
 
+  async devolverStock(req, res) {
+    try {
+      const pedidoId = req.params.id;
+      const resultado = await pedidoService.devolverStock(pedidoId);
+      res.status(200).json({ mensaje: 'Stock devuelto con éxito', resultado });
+    } catch (error) {
+      res.status(500).json({ mensaje: 'Error al devolver el stock', error: error.message });
+    }
+  }
 }
 
 module.exports = new PedidoController();

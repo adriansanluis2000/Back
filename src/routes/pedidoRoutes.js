@@ -17,4 +17,7 @@ router.delete('/:id', pedidoController.eliminarPedido);
 // Actualizar un pedido existente
 router.put('/:id', pedidoController.actualizarPedido);
 
+// Devolver las unidades de los productos de un pedido
+router.post('/devolver-stock/:id', pedidoController.devolverStock);
+
 module.exports = router;
