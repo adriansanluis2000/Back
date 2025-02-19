@@ -22,6 +22,7 @@ jest.mock('../models/producto', () => {
     return {
         findAll: jest.fn(),
         belongsToMany: jest.fn(),
+        update: jest.fn()
     };
 });
 
@@ -362,5 +363,55 @@ describe('PedidoService', () => {
             expect(productoMock.update).toHaveBeenCalledWith({ stock: 15 }); // 10 + 5 (stock actual + cantidad del pedido previo)
         });
 
+    })
+
+    describe('devolverStock', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+    
+        it('debería devolver el stock y eliminar el pedido con éxito', async () => {
+            const mockPedido = {
+                Productos: [
+                    { id: 1, PedidoProducto: { cantidad: 10 } },
+                    { id: 2, PedidoProducto: { cantidad: 5 } }
+                ]
+            };
+    
+            const mockProducto1 = { stock: 20, update: jest.fn() };
+            const mockProducto2 = { stock: 30, update: jest.fn() };
+    
+            Pedido.findByPk.mockResolvedValue(mockPedido);
+            Producto.findByPk.mockImplementation((id) => {
+                if (id === 1) return Promise.resolve(mockProducto1);
+                if (id === 2) return Promise.resolve(mockProducto2);
+            });
+            Pedido.destroy.mockResolvedValue();
+    
+            const result = await PedidoService.devolverStock(1);
+    
+            expect(Pedido.findByPk).toHaveBeenCalledWith(1, expect.any(Object));
+            expect(Producto.findByPk).toHaveBeenCalledTimes(2);
+            expect(mockProducto1.update).toHaveBeenCalledWith({ stock: 30 });
+            expect(mockProducto2.update).toHaveBeenCalledWith({ stock: 35 });
+            expect(Pedido.destroy).toHaveBeenCalledWith({ where: { id: 1 } });
+            expect(result).toEqual({ mensaje: 'Stock devuelto y pedido eliminado con éxito.' });
+        });
+    
+        it('debería lanzar un error si no se encuentra el pedido', async () => {
+            Pedido.findByPk.mockResolvedValue(null);
+    
+            await expect(PedidoService.devolverStock(1)).rejects.toThrow('Pedido no encontrado.');
+            expect(Pedido.findByPk).toHaveBeenCalledWith(1, expect.any(Object));
+            expect(Pedido.destroy).not.toHaveBeenCalled();
+        });
+    
+        it('debería manejar errores durante la devolución de stock y eliminación del pedido', async () => {
+            Pedido.findByPk.mockRejectedValue(new Error('Database error'));
+    
+            await expect(PedidoService.devolverStock(1)).rejects.toThrow('Error al devolver el stock: Database error');
+            expect(Pedido.findByPk).toHaveBeenCalledWith(1, expect.any(Object));
+            expect(Pedido.destroy).not.toHaveBeenCalled();
+        });
     })
 });
