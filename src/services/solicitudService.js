@@ -10,7 +10,7 @@ const crearSolicitud = async (productos) => {
             }
         });
 
-        if (!productosExistentes) {
+        if (productosExistentes.length !== productos.length) {
             throw new Error('Uno o más productos no existen en la base de datos.');
         }
 
@@ -106,15 +106,17 @@ const actualizarSolicitud = async (solicitudId, productos) => {
 
             // Aumentar el stock del producto en el almacén
             const productoAlmacen = await Producto.findByPk(id);
-            if (productoAlmacen) {
-                await productoAlmacen.update({ stock: productoAlmacen.stock + cantidad });
+            if (!productoAlmacen) {
+                throw new Error(`Producto con ID ${id} no encontrado en el almacén.`);
             }
+
+            await productoAlmacen.update({ stock: productoAlmacen.stock + cantidad });
         }
 
         // Verificar si la solicitud aún tiene productos asociados
         const productosRestantes = await ProductoSolicitud.findAll({ where: { solicitudId } });
 
-        if (productosRestantes.length === 0) {
+        if (productosRestantes?.length === 0) {
             // Si ya no tiene productos, eliminar la solicitud
             await solicitud.destroy();
             return { mensaje: 'Solicitud eliminada porque ya no tiene productos.' };
