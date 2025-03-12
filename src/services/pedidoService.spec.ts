@@ -1,5 +1,5 @@
 const PedidoService = require('../services/pedidoService');
-const { Pedido, PedidoProducto } = require('../models/pedido');
+const { Pedido, ProductoPedido } = require('../models/pedido');
 const Producto = require('../models/producto');
 const { Op } = require('sequelize');
 
@@ -12,7 +12,7 @@ jest.mock('../models/pedido', () => {
             destroy: jest.fn(),
             belongsToMany: jest.fn(),
         },
-        PedidoProducto: {
+        ProductoPedido: {
             create: jest.fn(),
         }
     };
@@ -55,7 +55,7 @@ describe('PedidoService', () => {
             const resultado = await PedidoService.crearPedido(datosPedido);
 
             expect(Pedido.create).toHaveBeenCalled();
-            expect(PedidoProducto.create).toHaveBeenCalledTimes(2);
+            expect(ProductoPedido.create).toHaveBeenCalledTimes(2);
             expect(mockProducto1.update).toHaveBeenCalledWith({ stock: 3 });
             expect(mockProducto2.update).toHaveBeenCalledWith({ stock: 7 });
             expect(resultado).toEqual({ id: 1 });
@@ -104,7 +104,7 @@ describe('PedidoService', () => {
             const resultado = await PedidoService.crearPedido(datosPedidoEntrante);
 
             expect(Pedido.create).toHaveBeenCalled();
-            expect(PedidoProducto.create).toHaveBeenCalledTimes(2);
+            expect(ProductoPedido.create).toHaveBeenCalledTimes(2);
 
             // Verificar actualización de stock
             expect(mockProducto1.update).toHaveBeenCalledWith({ stock: 3 }); // 5 - 2
@@ -132,7 +132,7 @@ describe('PedidoService', () => {
             const resultado = await PedidoService.crearPedido(datosPedidoSaliente);
 
             expect(Pedido.create).toHaveBeenCalled();
-            expect(PedidoProducto.create).toHaveBeenCalledTimes(2);
+            expect(ProductoPedido.create).toHaveBeenCalledTimes(2);
 
             // Verificar actualización de stock
             expect(mockProducto1.update).toHaveBeenCalledWith({ stock: 7 }); // 5 + 2
@@ -244,8 +244,8 @@ describe('PedidoService', () => {
             const pedidoMock = {
                 id: 1,
                 Productos: [
-                    { id: 1, PedidoProducto: { cantidad: 1 } },
-                    { id: 2, PedidoProducto: { cantidad: 1 } }
+                    { id: 1, ProductoPedido: { cantidad: 1 } },
+                    { id: 2, ProductoPedido: { cantidad: 1 } }
                 ],
                 tipo: 'saliente',
                 update: jest.fn(),
@@ -259,8 +259,8 @@ describe('PedidoService', () => {
             Producto.findByPk = jest.fn().mockImplementation((id) => {
                 return id === 1 ? productoMock1 : id === 2 ? productoMock2 : null;
             });
-            PedidoProducto.destroy = jest.fn().mockResolvedValue(true);
-            PedidoProducto.create = jest.fn().mockResolvedValue(true);
+            ProductoPedido.destroy = jest.fn().mockResolvedValue(true);
+            ProductoPedido.create = jest.fn().mockResolvedValue(true);
 
             const resultado = await PedidoService.actualizarPedido(id, datosPedido);
 
@@ -346,7 +346,7 @@ describe('PedidoService', () => {
                 id: 1,
                 tipo: 'entrante', // Tipo original es "entrante"
                 Productos: [
-                    { id: 1, PedidoProducto: { cantidad: 5 } },
+                    { id: 1, ProductoPedido: { cantidad: 5 } },
                 ],
                 update: jest.fn(),
             };
@@ -355,7 +355,7 @@ describe('PedidoService', () => {
 
             Pedido.findByPk = jest.fn().mockResolvedValue(pedidoMock);
             Producto.findByPk = jest.fn().mockResolvedValue(productoMock);
-            PedidoProducto.destroy = jest.fn().mockResolvedValue(true);
+            ProductoPedido.destroy = jest.fn().mockResolvedValue(true);
 
             await PedidoService.actualizarPedido(id, datosPedido);
 
@@ -373,8 +373,8 @@ describe('PedidoService', () => {
         it('debería devolver el stock y eliminar el pedido con éxito', async () => {
             const mockPedido = {
                 Productos: [
-                    { id: 1, PedidoProducto: { cantidad: 10 } },
-                    { id: 2, PedidoProducto: { cantidad: 5 } }
+                    { id: 1, ProductoPedido: { cantidad: 10 } },
+                    { id: 2, ProductoPedido: { cantidad: 5 } }
                 ]
             };
     

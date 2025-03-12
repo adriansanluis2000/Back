@@ -311,7 +311,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const { Pedido, PedidoProducto } = require('../models/pedido');
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const { Pedido, ProductoPedido } = require('../models/pedido');
 const Producto = require('../models/producto');
 &nbsp;
 class PedidoService {
@@ -355,7 +355,7 @@ class PedidoService {
             // Asociar productos al pedido con sus cantidades en la tabla intermedia
             await Promise.all(
                 productos.map(async (producto) =&gt; {
-                    await PedidoProducto.create({
+                    await ProductoPedido.create({
                         pedidoId: nuevoPedido.id,
                         productoId: producto.id,
                         cantidad: producto.cantidad

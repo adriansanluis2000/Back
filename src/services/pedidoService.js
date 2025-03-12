@@ -1,4 +1,4 @@
-const { Pedido, PedidoProducto } = require('../models/pedido');
+const { Pedido, ProductoPedido } = require('../models/pedido');
 const Producto = require('../models/producto');
 const { Op } = require('sequelize');
 
@@ -45,7 +45,7 @@ class PedidoService {
             // Asociar productos al pedido con sus cantidades en la tabla intermedia
             await Promise.all(
                 productos.map(async (producto) => {
-                    await PedidoProducto.create({
+                    await ProductoPedido.create({
                         pedidoId: nuevoPedido.id,
                         productoId: producto.id,
                         cantidad: producto.cantidad
@@ -142,12 +142,12 @@ class PedidoService {
             }
 
             // Revertir el stock de productos del pedido actual
-            for (const pedidoProducto of pedido.Productos) {
-                const productoDb = await Producto.findByPk(pedidoProducto.id);
+            for (const ProductoPedido of pedido.Productos) {
+                const productoDb = await Producto.findByPk(ProductoPedido.id);
                 const stockNuevo =
                     pedido.tipo === 'entrante'
-                        ? productoDb.stock + pedidoProducto.PedidoProducto.cantidad
-                        : productoDb.stock - pedidoProducto.PedidoProducto.cantidad;
+                        ? productoDb.stock + ProductoPedido.ProductoPedido.cantidad
+                        : productoDb.stock - ProductoPedido.ProductoPedido.cantidad;
 
                 await productoDb.update({ stock: stockNuevo });
             }
@@ -168,11 +168,11 @@ class PedidoService {
             }
 
             // Actualizar el pedido con los nuevos productos
-            await PedidoProducto.destroy({ where: { pedidoId: id } });
+            await ProductoPedido.destroy({ where: { pedidoId: id } });
 
             const nuevoTotal = await Promise.all(
                 productos.map(async (producto) => {
-                    await PedidoProducto.create({
+                    await ProductoPedido.create({
                         pedidoId: pedido.id,
                         productoId: producto.id,
                         cantidad: producto.cantidad
@@ -215,9 +215,9 @@ class PedidoService {
             }
 
             // Restaurar el stock de cada producto del pedido
-            for (const pedidoProducto of pedido.Productos) {
-                const productoDb = await Producto.findByPk(pedidoProducto.id);
-                const stockNuevo = productoDb.stock + pedidoProducto.PedidoProducto.cantidad;
+            for (const ProductoPedido of pedido.Productos) {
+                const productoDb = await Producto.findByPk(ProductoPedido.id);
+                const stockNuevo = productoDb.stock + ProductoPedido.ProductoPedido.cantidad;
                 await productoDb.update({ stock: stockNuevo });
             }
 

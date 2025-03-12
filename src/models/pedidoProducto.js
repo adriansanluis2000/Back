@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const PedidoProducto = sequelize.define('PedidoProducto', {
+const ProductoPedido = sequelize.define('ProductoPedido', {
     pedidoId: {
         type: DataTypes.INTEGER,
         references: {
@@ -38,4 +38,4 @@ const PedidoProducto = sequelize.define('PedidoProducto', {
     timestamps: false,
 });
 
-module.exports = PedidoProducto;
+module.exports = ProductoPedido;

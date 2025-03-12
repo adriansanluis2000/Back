@@ -6,6 +6,7 @@ const cors = require('cors');
 const Producto = require('./src/models/producto');
 const productoRoutes = require('./src/routes/productoRoutes');
 const pedidoRoutes = require('./src/routes/pedidoRoutes');
+const solicitudRoutes = require('./src/routes/solicitudRoutes');
 
 
 // Configura CORS
@@ -18,6 +19,7 @@ app.use(express.json()); // Para poder parsear el cuerpo de las solicitudes JSON
 // Definir rutas
 app.use('/api/productos', productoRoutes);
 app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/solicitudes', solicitudRoutes);
 
 // Endpoint para verificar nombre de producto
 app.get('/verificar-nombre', async (req, res) => {

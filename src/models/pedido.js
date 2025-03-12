@@ -33,7 +33,7 @@ const Pedido = sequelize.define('Pedido', {
 });
 
 // Tabla intermedia para almacenar la cantidad de cada producto en el pedido
-const PedidoProducto = sequelize.define('PedidoProducto', {
+const ProductoPedido = sequelize.define('ProductoPedido', {
     cantidad: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -52,10 +52,11 @@ const PedidoProducto = sequelize.define('PedidoProducto', {
     }
 }, {
     timestamps: false,
+    tableName: 'productos_pedido'
 });
 
 // Relaciones
-Pedido.belongsToMany(Producto, { through: PedidoProducto, foreignKey: 'pedidoId' });
-Producto.belongsToMany(Pedido, { through: PedidoProducto, foreignKey: 'productoId' });
+Pedido.belongsToMany(Producto, { through: ProductoPedido, foreignKey: 'pedidoId' });
+Producto.belongsToMany(Pedido, { through: ProductoPedido, foreignKey: 'productoId' });
 
-module.exports = { Pedido, PedidoProducto };
+module.exports = { Pedido, ProductoPedido };
