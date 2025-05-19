@@ -2,7 +2,7 @@ const productoService = require('../services/productoService');
 
 exports.crear = async (req, res) => {
     try {
-        const { nombre, precio, stock } = req.body;
+        const { nombre, precio, stock, umbral } = req.body;
 
         if (!nombre || typeof nombre !== 'string') {
             return res.status(400).json({ message: "El nombre es requerido y debe ser una cadena de texto válida" });
@@ -14,6 +14,10 @@ exports.crear = async (req, res) => {
 
         if (!stock || typeof stock !== 'number' || stock <= 0) {
             return res.status(400).json({ message: "La cantidad es requerida y debe ser un número positivo" });
+        }
+
+        if (umbral > stock) {
+            throw new Error("El umbral no puede ser mayor que el stock disponible");
         }
 
         const producto = await productoService.crearProducto(req.body);

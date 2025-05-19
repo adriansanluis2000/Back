@@ -2,26 +2,6 @@ const Producto = require('../models/producto');
 
 class ProductoService {
     async crearProducto(datosProducto) {
-        if (!datosProducto.nombre || typeof datosProducto.nombre !== 'string') {
-            throw new Error("El nombre es requerido y debe ser una cadena de texto válida");
-        }
-
-        if (typeof datosProducto.precio !== 'number' || datosProducto.precio <= 0) {
-            throw new Error("El precio es requerido y debe ser un número positivo");
-        }
-
-        if (typeof datosProducto.stock !== 'number' || datosProducto.stock < 1) {
-            throw new Error("El stock es requerido y debe ser un número entero mayor o igual a 1");
-        }
-
-        if (typeof datosProducto.umbral !== 'number' || datosProducto.umbral < 1) {
-            throw new Error("El umbral es requerido y debe ser un número entero mayor o igual a 1");
-        }
-
-        if (datosProducto.umbral > datosProducto.stock) {
-            throw new Error("El umbral no puede ser mayor que el stock disponible");
-        }
-
         try {
             const producto = await Producto.create(datosProducto);
             return producto;
