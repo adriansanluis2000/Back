@@ -54,6 +54,13 @@ describe('crear', () => {
     expect(res.json).toHaveBeenCalledWith({ message: "La cantidad es requerida y debe ser un número positivo" });
   });
 
+  test('debería devolver un error si el umbral es mayor que el stock disponible', async () => {
+    req.body = { nombre: 'Gafas de sol', precio: 100, stock: 10, umbral: 20 };
+
+    await productoController.crear(req, res);
+    expect(res.json).toHaveBeenCalledWith({ message: "El umbral no puede ser mayor que el stock disponible" });
+  });
+
   test('debería crear un producto exitosamente y devolver status 201', async () => {
     req.body = { id: 1, nombre: 'Product 1', precio: 20, stock: 10 };
     const mockProducto = { id: 1, ...req.body };

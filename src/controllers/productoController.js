@@ -17,7 +17,7 @@ exports.crear = async (req, res) => {
         }
 
         if (umbral > stock) {
-            throw new Error("El umbral no puede ser mayor que el stock disponible");
+            return res.status(400).json({ message: "El umbral no puede ser mayor que el stock disponible" });
         }
 
         const producto = await productoService.crearProducto(req.body);
