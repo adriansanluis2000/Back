@@ -1,0 +1,42 @@
+@startuml
+
+class Producto {
+  +id: number
+  +nombre: string
+  +precio: number
+  +stock: number
+  +umbral: number
+  +descripcion: string
+}
+
+note right of Producto::id
+  Front: number
+  Back: INTEGER, PK, autoincrement
+end note
+
+note right of Producto::nombre
+  Front: string
+  Back: STRING, not null, unique
+end note
+
+note right of Producto::precio
+  Front: number
+  Back: DECIMAL(10,2), min 0.01
+end note
+
+note right of Producto::stock
+  Front: number
+  Back: INTEGER, min 1
+end note
+
+note right of Producto::umbral
+  Front: number
+  Back: INTEGER, min 1
+end note
+
+note right of Producto::descripcion
+  Front: string (opcional)
+  Back: TEXT (nullable)
+end note
+
+@enduml

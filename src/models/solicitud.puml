@@ -1,0 +1,36 @@
+@startuml
+
+class Solicitud {
+  +id: number
+  +fecha: string
+}
+
+class Producto {
+  +id: number
+  +nombre: string
+  +precio: number
+  +stock: number
+  +umbral: number
+  +descripcion: string
+}
+
+class ProductoSolicitud {
+  +cantidad: number
+}
+
+Solicitud "1" -- "0..*" ProductoSolicitud : contiene >
+Producto "1" -- "0..*" ProductoSolicitud : < incluido en
+
+Solicitud "1" -- "0..*" Producto : incluye >
+
+note right of Solicitud
+  Tabla: solicitudes
+  fecha: DATE (default: NOW)
+end note
+
+note right of ProductoSolicitud
+  Tabla intermedia (productos_solicitud)
+  Representa la cantidad solicitada por producto
+end note
+
+@enduml

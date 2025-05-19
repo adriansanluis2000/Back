@@ -1,0 +1,38 @@
+@startuml
+
+class Pedido {
+  +id: number
+  +fecha: string
+  +precioTotal: number
+  +tipo: string
+}
+
+class Producto {
+  +id: number
+  +nombre: string
+  +precio: number
+  +stock: number
+  +umbral: number
+  +descripcion: string
+}
+
+class ProductoPedido {
+  +cantidad: number
+}
+
+Pedido "1" -- "0..*" ProductoPedido : contiene >
+Producto "1" -- "0..*" ProductoPedido : < incluido en
+
+Pedido "1" -- "0..*" Producto : incluye >
+
+note right of Pedido
+  tipo: 'entrante' | 'saliente'
+  fecha: DATE (default: NOW)
+end note
+
+note right of ProductoPedido
+  Tabla intermedia (productos_pedido)
+  Representa la cantidad de cada producto en el pedido
+end note
+
+@enduml
