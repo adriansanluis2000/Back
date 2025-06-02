@@ -221,9 +221,6 @@ class PedidoService {
                 await productoDb.update({ stock: stockNuevo });
             }
 
-            // Eliminar el pedido después de devolver el stock
-            await Pedido.destroy({ where: { id } });
-
             return { mensaje: 'Stock devuelto y pedido eliminado con éxito.' };
         } catch (error) {
             throw new Error('Error al devolver el stock: ' + error.message);
