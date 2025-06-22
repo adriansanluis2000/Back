@@ -24,7 +24,7 @@ exports.crear = async (req, res) => {
         res.status(201).json(producto);
 
     } catch (error) {
-        res.status(404).json({
+        res.status(400).json({
             message: "Error al procesar la solicitud",
             error: error.message
         });

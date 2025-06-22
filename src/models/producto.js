@@ -47,8 +47,8 @@ const Producto = sequelize.define('Producto', {
         msg: 'La cantidad debe ser un número entero'
       },
       min: {
-        args: [1],
-        msg: 'La cantidad mínima es 1'
+        args: [0],
+        msg: 'La cantidad mínima es 0'
       }
     }
   },
@@ -63,8 +63,8 @@ const Producto = sequelize.define('Producto', {
         msg: 'El umbral debe ser un número entero'
       },
       min: {
-        args: [1],
-        msg: 'El umbral debe ser al menos 1'
+        args: [0],
+        msg: 'El umbral mínimo es 0'
       }
     }
   },

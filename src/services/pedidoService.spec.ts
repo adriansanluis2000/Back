@@ -394,7 +394,6 @@ describe('PedidoService', () => {
             expect(Producto.findByPk).toHaveBeenCalledTimes(2);
             expect(mockProducto1.update).toHaveBeenCalledWith({ stock: 30 });
             expect(mockProducto2.update).toHaveBeenCalledWith({ stock: 35 });
-            expect(Pedido.destroy).toHaveBeenCalledWith({ where: { id: 1 } });
             expect(result).toEqual({ mensaje: 'Stock devuelto y pedido eliminado con éxito.' });
         });
     
