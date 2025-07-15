@@ -82,7 +82,7 @@ describe('crear', () => {
 
     await productoController.crear(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       message: "Error al procesar la solicitud",
       error: error.message
